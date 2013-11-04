@@ -13,8 +13,9 @@
 #include "interface.h"
 /*=====================================================================================================*/
 /*=====================================================================================================*/
-#define TOUCH_EN  0
-#define SENSOR_EN 1
+#define FSM_TFT  0
+#define FSM_UART 1
+#define FSM_DATA 2
 
 FATFS fatfs;
 FRESULT res;
@@ -27,75 +28,47 @@ void System_Init( void )
 {
   SystemInit();
   GPIO_Config();
-#if SENSOR_EN
   I2C_Config();
-#endif
   LCD_Init();
-#if TOUCH_EN
-	TSC_Config();
-#endif
-  Delay_10ms(10);
-}
-/*=====================================================================================================*/
-/*=====================================================================================================*/
-void Windows_Ctrl( void )
-{
-	static u8 menu_select = Menu_INIT;
-#if TOUCH_EN
-	TSC_STATE *tsc_info;
-#endif
-	if(KEY_WAKE==1) {
-    menu_select++;
-    if(menu_select>4) menu_select = Menu_INIT;
-    Windows_SelMenu(menu_select);
-    Delay_10ms(5);
-  }
-  else if(KEY_TAMP==0) {
-    menu_select--;
-    if(menu_select<1) menu_select = Menu_INFO;
-    Windows_SelMenu(menu_select);
-    Delay_10ms(5);
-  }
-#if TOUCH_EN
-  tsc_info = TSC_TS_GetState();
 
-  if(tsc_info->Z>20) {
-    if(tsc_info->X<150) {
-      if(tsc_info->Y<256) {
-        menu_select = Menu_INFO;
-        Windows_SelMenu(menu_select);
-      }
-      else if((tsc_info->Y<512)&&(tsc_info->Y>255)) {
-        menu_select = Menu_WAVE;
-        Windows_SelMenu(menu_select);
-      }
-      else if((tsc_info->Y<768)&&(tsc_info->Y>511)) {
-        menu_select = Menu_SDCARD;
-        Windows_SelMenu(menu_select);
-      }
-      else if(tsc_info->Y>767) {
-        menu_select = Menu_INIT;
-        Windows_SelMenu(menu_select);
-      }
-    }
+  Delay_10ms(10);
+
+  Windows_Init();
+
+  Delay_10ms(10);
+//  SDCARD_InitInfo();
+  SENSOR_InitInfo();
+
+  if(SysTick_Config(420000)) {    // 168MHz / 420000 = 400Hz = 2.5ms
+    while(1);
   }
-#endif
-  Windows_Interface(menu_select);
 }
 /*=====================================================================================================*/
 /*=====================================================================================================*/
 int main( void )
 {
+  u8 FSM_State = FSM_TFT;
+
   System_Init();
-  Windows_Init();
-  Delay_10ms(10);
-//  SDCARD_InitInfo();
-#if SENSOR_EN
-  SENSOR_InitInfo();
-#endif
+
   while(1) {
-    Windows_Ctrl();
-    LED_1 = ~LED_1;
+    LED_1 = !LED_1;
+    switch(FSM_State) {
+      case FSM_TFT:
+        Windows_Ctrl();
+        FSM_State = FSM_UART;
+        break;
+
+      case FSM_UART:
+        
+        FSM_State = FSM_DATA;
+        break;
+
+      case FSM_DATA:
+        
+        FSM_State = FSM_TFT;
+        break;
+    }
   }
 }
 /*=====================================================================================================*/
@@ -131,6 +104,52 @@ void GPIO_Config( void )
 	LED_2 = 0;
 	LED_3 = 0;
 	LED_4 = 0;
+}
+/*=====================================================================================================*/
+/*=====================================================================================================*/
+void Windows_Ctrl( void )
+{
+	static u8 menu_select = Menu_INIT;
+
+  u16 TouchX = TouchBuf[0];
+  u16 TouchY = TouchBuf[1];
+  u16 TouchZ = TouchBuf[2];
+
+	if(KEY_WAKE==1) {
+    menu_select++;
+    if(menu_select>4) menu_select = Menu_INIT;
+    Windows_SelMenu(menu_select);
+    Delay_10ms(5);
+  }
+  else if(KEY_TAMP==0) {
+    menu_select--;
+    if(menu_select<1) menu_select = Menu_INFO;
+    Windows_SelMenu(menu_select);
+    Delay_10ms(5);
+  }
+
+  if(TouchZ>20) {
+    if(TouchX<150) {
+      if(TouchY<256) {
+        menu_select = Menu_INFO;
+        Windows_SelMenu(menu_select);
+      }
+      else if((TouchY<512)&&(TouchY>255)) {
+        menu_select = Menu_WAVE;
+        Windows_SelMenu(menu_select);
+      }
+      else if((TouchY<768)&&(TouchY>511)) {
+        menu_select = Menu_SDCARD;
+        Windows_SelMenu(menu_select);
+      }
+      else if(TouchY>767) {
+        menu_select = Menu_INIT;
+        Windows_SelMenu(menu_select);
+      }
+    }
+  }
+
+  Windows_Interface(menu_select);
 }
 /*=====================================================================================================*/
 /*=====================================================================================================*/

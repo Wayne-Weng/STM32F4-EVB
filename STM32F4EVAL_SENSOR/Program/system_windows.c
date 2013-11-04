@@ -7,6 +7,7 @@
 #include "module_mpu6050.h"
 #include "module_ssd1963.h"
 #include "algorithm_mathUnit.h"
+#include "interface.h"
 /*=====================================================================================================*/
 /*=====================================================================================================*/
 WaveForm_Struct WaveForm;
@@ -173,7 +174,6 @@ void Windows_SelMenu( u8 menuType )
 /*=====================================================================================================*/
 void Windows_Interface( u8 Menu_Sel )
 {
-  s16 ReadIMU[8] = {0};
   static s16 Sita = 0;
 
 	switch(Menu_Sel) {
@@ -190,7 +190,6 @@ void Windows_Interface( u8 Menu_Sel )
 		case Menu_WAVE:
       Sita++;
       if(Sita == 360) Sita = 0;
-      MPU6050_Read(ReadIMU);
       WaveForm.Data[0] = ReadIMU[0];
       WaveForm.Data[1] = ReadIMU[1];
       WaveForm.Data[2] = ReadIMU[2];
