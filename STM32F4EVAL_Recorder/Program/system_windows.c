@@ -10,7 +10,21 @@
 #include "interface.h"
 /*=====================================================================================================*/
 /*=====================================================================================================*/
+uc8 CTRL_SelStr[4][3][16] = {
+  {"ON",    "OFF",  ""},
+  {"10 Hz", "50 Hz", "100 Hz"},
+  {"Acc",   "Gyro", "Ang"},
+  {"50",    "100",  "180"}
+};
+const float CTRL_SelMed[12] = {
+  1.0f, 1.5f, 0.0f,
+  2.5f, 2.5f, 3.0f,
+  1.5f, 2.0f, 1.5f,
+  1.0f, 1.5f, 1.5f
+};
+
 WaveForm_Struct WaveForm;
+u8 WaveName;
 /*=====================================================================================================*/
 /*=====================================================================================================*/
 void Windows_Init( void )
@@ -28,47 +42,71 @@ void Windows_Init( void )
 	WaveForm.PointColor[1] = GREEN;
 	WaveForm.PointColor[2] = BLUE;
 
+  WaveName = WaveName_Ang;
 	Windows_DrawMenu();
 }
 /*=====================================================================================================*/
 /*=====================================================================================================*/
-#define WINDOW_H 240
-#define WINDOW_L 400
-
-#define ButMenu_W	95
-#define ButMenu_L	20
-void Windows_DrawButton( u16 CoordiX, u16 CoordiY, u32 Color )
+void Windows_DrawButtonA( u16 CoordiX, u16 CoordiY, u32 Color )
 {
 	LCD_DrawRectangle(CoordiX, CoordiY, ButMenu_W, ButMenu_L, Color);
 	LCD_DrawRectangle(CoordiX+1, CoordiY+1, ButMenu_W-2, ButMenu_L-2, Color);
 }
 /*=====================================================================================================*/
 /*=====================================================================================================*/
-#define SelMenu_1	(4)
-#define SelMenu_2	(SelMenu_1+ButMenu_W+4) // 4 + 95 + 4 = 103
-#define SelMenu_3	(SelMenu_2+ButMenu_W+4) // 103 + 95 + 4 = 202
-#define SelMenu_4	(SelMenu_3+ButMenu_W+4) // 202 + 95 + 4 = 301
+#define ButtinB_W 70
+#define ButtinB_L 20
+void Windows_DrawButtonB( u16 CoordiX, u16 CoordiY, u32 Color )
+{
+	LCD_DrawRectangle(CoordiX, CoordiY, ButtinB_W, ButtinB_L, Color);
+	LCD_DrawRectangle(CoordiX+1, CoordiY+1, ButtinB_W-2, ButtinB_L-2, Color);
+}
+void Windows_DrawButtonMenuB( u8 Coordi, u8 Fill, u32 Color )
+{
+  u8 x = 0, y = 0;
 
-#define Frame_L (SelMenu_4+ButMenu_W+4)   // 301 + 95 + 4 = 400
-#define Frame_H (WINDOW_H-ButMenu_L-5)    // 240 - 20 - 5 = 215
+  x = (u8)(Coordi%3);
+  y = (u8)(Coordi/3);
 
-#define RealFrame_L (Frame_L-4) // 400 - 4 = 396
-#define RealFrame_H (Frame_H-4) // 215 - 4 = 211
+  if(Fill)
+    LCD_DrawRectangleFull(150+82*x, 58+40*y, ButtinB_W+1, ButtinB_L+1, Color);
+  else
+    Windows_DrawButtonB(150+82*x, 58+40*y, Color);
+}
+void Windows_DrawButtonFontB( u8 Coordi, u32 FColor, u32 BColor )
+{
+  u8 x = 0, y = 0;
 
+  x = (u8)(Coordi%3);
+  y = (u8)(Coordi/3);
+
+  LCD_PutStr(185+82*x-8*CTRL_SelMed[Coordi], 61+40*y, (u8*)CTRL_SelStr[y][x], ASCII1608, FColor, BColor);
+}
+void Windows_DrawButtonSelB( u8 Channal, u8 SelButton, u32 ButtonFontColor, u32 ButtonColor )
+{
+  Windows_DrawButtonMenuB(SelChannal[Channal], 1, BLACK);
+  Windows_DrawButtonMenuB(SelChannal[Channal], 0, WHITE);
+  Windows_DrawButtonFontB(SelChannal[Channal], WHITE, BLACK);
+  SelChannal[Channal] = SelButton;
+  Windows_DrawButtonMenuB(SelChannal[Channal], 1, ButtonColor);
+  Windows_DrawButtonFontB(SelChannal[Channal], ButtonFontColor, ButtonColor);
+}
+/*=====================================================================================================*/
+/*=====================================================================================================*/
 void Windows_DrawMenu( void )
 {
   //Draw Frame
   LCD_DrawRectangle(0, 0, Frame_L-1, Frame_H-1, WHITE);
   LCD_DrawRectangle(1, 1, Frame_L-3, Frame_H-3, WHITE);
   //Draw Button and Strings
-	Windows_DrawButton(SelMenu_1, WINDOW_H-ButMenu_L-3, WHITE);
-	LCD_PutStr(SelMenu_1+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"INIT", ASCII1608, WHITE, BLACK);
-	Windows_DrawButton(SelMenu_2, WINDOW_H-ButMenu_L-3, WHITE);
+	Windows_DrawButtonA(SelMenu_1, WINDOW_H-ButMenu_L-3, WHITE);
+	LCD_PutStr(SelMenu_1+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"INFO",   ASCII1608, WHITE, BLACK);
+	Windows_DrawButtonA(SelMenu_2, WINDOW_H-ButMenu_L-3, WHITE);
 	LCD_PutStr(SelMenu_2+2+(ButMenu_W>>1)-24,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"SDCARD", ASCII1608, WHITE, BLACK);
-	Windows_DrawButton(SelMenu_3, WINDOW_H-ButMenu_L-3, WHITE);
-	LCD_PutStr(SelMenu_3+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"WAVE", ASCII1608, WHITE, BLACK);
-	Windows_DrawButton(SelMenu_4, WINDOW_H-ButMenu_L-3, WHITE);
-	LCD_PutStr(SelMenu_4+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"INFO", ASCII1608, WHITE, BLACK);
+	Windows_DrawButtonA(SelMenu_3, WINDOW_H-ButMenu_L-3, WHITE);
+	LCD_PutStr(SelMenu_3+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"WAVE",   ASCII1608, WHITE, BLACK);
+	Windows_DrawButtonA(SelMenu_4, WINDOW_H-ButMenu_L-3, WHITE);
+	LCD_PutStr(SelMenu_4+2+(ButMenu_W>>1)-16,WINDOW_H-(ButMenu_L>>1)-8-2, (u8*)"CTRL",   ASCII1608, WHITE, BLACK);
   
   Windows_SelMenu(1);
 }
@@ -93,15 +131,13 @@ void EVENT_FIFO( uc8 *newStr )
 }
 /*=====================================================================================================*/
 /*=====================================================================================================*/
-#define WaveFromNum_X 347
-#define WaveFromNum_Y 8
 void Windows_SelMenu( u8 menuType )
 {
   u16 StartCoordi = SelMenu_1+2;
   static u16 last_Coordi = SelMenu_1+2;
   
   switch(menuType){
-    case Menu_INIT:
+    case Menu_INFO:
       StartCoordi = SelMenu_1+2;
       break;
     case Menu_SDCARD:
@@ -110,7 +146,7 @@ void Windows_SelMenu( u8 menuType )
     case Menu_WAVE:
       StartCoordi = SelMenu_3+2;
       break;
-    case Menu_INFO:
+    case Menu_CTRL:
       StartCoordi = SelMenu_4+2;
       break;
   }
@@ -142,31 +178,28 @@ void Windows_SelMenu( u8 menuType )
   
   switch(menuType){
 
-/************************** FSM CONF **************************************/
-		case Menu_INIT:
+/************************** FSM INFO **************************************/
+		case Menu_INFO:
       LCD_DrawRectangleFull(2, 2, RealFrame_L, RealFrame_H, BLACK);
+      Windows_InitInfo(0);
 			break;
     
-/************************** FSM EVENT **************************************/
+/************************** FSM SDCARD ************************************/
 		case Menu_SDCARD:
 			LCD_DrawRectangleFull(2, 2, RealFrame_L, RealFrame_H, BLACK);
+      Windows_InitSDCard();
 			break;
-    
-/************************** FSM INFO **************************************/
+
+/************************** FSM WAVE **************************************/
 		case Menu_WAVE:
       LCD_DrawRectangleFull(2, 2, RealFrame_L, RealFrame_H, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*0,  (u8*)"------", ASCII1608, WHITE, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*2,  (u8*)" SINE ", ASCII1608, WHITE, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*4,  (u8*)"------", ASCII1608, WHITE, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*7,  (u8*)"Axis-X", ASCII1608, RED, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*12, (u8*)"Axis-Y", ASCII1608, GREEN, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*17, (u8*)"Axis-Z", ASCII1608, BLUE, BLACK);
-      LCD_PutStr(WaveFromNum_X, WaveFromNum_Y+8*22, (u8*)"------", ASCII1608, WHITE, BLACK);
+      Windows_InitWaveFrom();
 			break;
     
-/************************** FSM CTRL *************************************/
-		case Menu_INFO:
+/************************** FSM CTRL **************************************/
+		case Menu_CTRL:
 			LCD_DrawRectangleFull(2, 2, RealFrame_L, RealFrame_H, BLACK);
+      Windows_InitCtrl();
 			break;
 	}
 }
@@ -174,32 +207,26 @@ void Windows_SelMenu( u8 menuType )
 /*=====================================================================================================*/
 void Windows_Interface( u8 Menu_Sel )
 {
-  static s16 Sita = 0;
-
 	switch(Menu_Sel) {
 
-/************************** FSM CONF **************************************/
-		case Menu_INIT:
-			break;
-    
-/************************** FSM EVENT **************************************/
-		case Menu_SDCARD:
-			break;
-    
 /************************** FSM INFO **************************************/
-		case Menu_WAVE:
-      Sita++;
-      if(Sita == 360) Sita = 0;
-      WaveForm.Data[0] = WaveFormData[0];
-      WaveForm.Data[1] = WaveFormData[1];
-      WaveForm.Data[2] = WaveFormData[2];
-      LCD_PutNum(WaveFromNum_X, WaveFromNum_Y+8*9,  Type_I, 5, WaveForm.Data[0], RED, BLACK);
-      LCD_PutNum(WaveFromNum_X, WaveFromNum_Y+8*14, Type_I, 5, WaveForm.Data[1], GREEN, BLACK);
-      LCD_PutNum(WaveFromNum_X, WaveFromNum_Y+8*19, Type_I, 5, WaveForm.Data[2], BLUE, BLACK);
-      WaveFormPrint(&WaveForm);
-			break;
-/************************** FSM CTRL *************************************/
 		case Menu_INFO:
+      Windows_WorkInfo();
+			break;
+
+/************************** FSM SDCARD ************************************/
+		case Menu_SDCARD:
+      Windows_WorkSDCard();
+			break;
+    
+/************************** FSM WAVE **************************************/
+		case Menu_WAVE:
+      Windows_WorkWaveFrom();
+			break;
+
+/************************** FSM CTRL **************************************/
+		case Menu_CTRL:
+      Windows_WorkCtrl();
 			break;
 	}
 }

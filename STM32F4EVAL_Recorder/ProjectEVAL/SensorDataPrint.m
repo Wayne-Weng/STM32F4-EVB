@@ -45,7 +45,7 @@ clear all;
 clc;
 clf;
 
-file = fopen('E:\My Research\My Programs\MATLAB\BlackBox\BLACKBOX.DAT', 'r');
+file = fopen('E:\My Research\My Programs\MATLAB\BlackBox\RECORDER.DAT', 'r');
 ReadData = fread(file, 'int16');
 
 fclose(file);

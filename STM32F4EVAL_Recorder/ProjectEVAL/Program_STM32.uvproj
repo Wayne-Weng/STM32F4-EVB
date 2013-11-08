@@ -583,6 +583,11 @@
               <FileType>1</FileType>
               <FilePath>..\Program\algorithm_moveAve.c</FilePath>
             </File>
+            <File>
+              <FileName>algorithm_compare.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Program\algorithm_compare.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

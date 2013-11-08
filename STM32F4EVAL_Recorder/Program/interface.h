@@ -24,6 +24,30 @@
 #define GYR_Y_OFFSET ((s16)0)
 #define GYR_Z_OFFSET ((s16)0)
 
+#define WaveFromNum_X 347
+#define WaveFromNum_Y 8
+
+#define WaveName_Acc 0
+#define WaveName_Gyr 1
+#define WaveName_Ang 2
+
+#define WINDOW_H 240
+#define WINDOW_L 400
+
+#define ButMenu_W	95
+#define ButMenu_L	20
+
+#define SelMenu_1	(4)
+#define SelMenu_2	(SelMenu_1+ButMenu_W+4) // 4 + 95 + 4 = 103
+#define SelMenu_3	(SelMenu_2+ButMenu_W+4) // 103 + 95 + 4 = 202
+#define SelMenu_4	(SelMenu_3+ButMenu_W+4) // 202 + 95 + 4 = 301
+
+#define Frame_L (SelMenu_4+ButMenu_W+4)   // 301 + 95 + 4 = 400
+#define Frame_H (WINDOW_H-ButMenu_L-5)    // 240 - 20 - 5 = 215
+
+#define RealFrame_L (Frame_L-4) // 400 - 4 = 396
+#define RealFrame_H (Frame_H-4) // 215 - 4 = 211
+
 #define SD_BUF_SIZE 128
 
 typedef __IO enum {
@@ -36,14 +60,26 @@ typedef __IO enum {
 
 void GPIO_Config( void );
 void Windows_Ctrl( void );
-void SENSOR_InitInfo( void );
-void SDCARD_InitInfo( void );
-void SDCARD_Recorder( void );
+void Windows_InitInfo( u8 Enable );
+void Windows_WorkInfo( void );
+void Windows_InitSDCard( void );
+void Windows_WorkSDCard( void );
+void Windows_InitWaveFrom( void );
+void Windows_WorkWaveFrom( void );
+void Windows_InitCtrl( void );
+void Windows_WorkCtrl( void );
 
+void SD_Recorder( void );
+
+extern u8 RecorderFileNo;
+extern u8 WaveName;
 extern s16 ReadIMU[8];
 extern u16 TouchBuf[3];
 extern s16 WaveFormData[4];
 extern Sensor_Mode SensorMode;
+extern u8 SelChannal[4];
+extern u16 RecorderFreq;
+extern u8 DelRecorderFile;
 /*=====================================================================================================*/
 /*=====================================================================================================*/
 #endif

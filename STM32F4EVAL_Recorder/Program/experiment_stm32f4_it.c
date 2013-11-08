@@ -11,8 +11,7 @@
 #include "interface.h"
 /*=====================================================================================================*/
 /*=====================================================================================================*/
-#define SD_RECODER 10
-extern vu16* SD_Buf;
+extern u16 SD_Buf[SD_BUF_SIZE];
 extern vu8 SD_Flag;
 
 s16 WaveFormData[4] = {0};
@@ -24,8 +23,8 @@ Sensor_Mode SensorMode = Mode_GyrCorrect;
 /*=====================================================================================================*/
 void SysTick_Handler( void )
 {
-  static u16 count = 0;
-  static u16 Correction_Time = 0;
+  static u32 Count = 0;
+  static u32 Correction_Time = 0;
 
   static s16 ACC_FIFO[3][256] = {0};
   static s16 GYR_FIFO[3][256] = {0};
@@ -130,18 +129,40 @@ void SysTick_Handler( void )
       /* Get Attitude Angle */
       AHRS_Update();
 
-      WaveFormData[0] = (s16)(AngE.Pitch*100.0f);
-      WaveFormData[1] = (s16)(AngE.Roll*100.0f);
+      switch(WaveName) {
+        case WaveName_Acc:  // mg/LSB
+          WaveFormData[0] = (s16)(Acc.TrueX*1000.0f);
+          WaveFormData[1] = (s16)(Acc.TrueY*1000.0f);
+          WaveFormData[2] = (s16)(Acc.TrueZ*1000.0f);
+          break;
+        case WaveName_Gyr:  // 0.1dps/LSB
+          WaveFormData[0] = (s16)(Gyr.TrueX*10.0f);
+          WaveFormData[1] = (s16)(Gyr.TrueY*10.0f);
+          WaveFormData[2] = (s16)(Gyr.TrueZ*10.0f);
+          break;
+        case WaveName_Ang:  // 0.01deg/LSB
+          WaveFormData[0] = (s16)(AngE.Pitch*100.0f);
+          WaveFormData[1] = (s16)(AngE.Roll*100.0f);
+          WaveFormData[2] = (s16)(AngE.Yaw*100.0f);
+          break;
+      }
 
-      Correction_Time++;
-      if(Correction_Time == SD_RECODER) {
-        Correction_Time = 0;
-        SD_Buf[count] = Acc.X;
-        count++;
-        if(count == SD_BUF_SIZE) {
-          count = 0;
-          SD_Flag = 1;
+      if(DelRecorderFile == 0) {
+        Correction_Time++;
+        if(Correction_Time == RecorderFreq) {
+          Correction_Time = 0;
+          SD_Buf[Count] = WaveFormData[1];
+          Count++;
+          if(Count == SD_BUF_SIZE) {
+            Count = 0;
+            SD_Flag = 1;
+          }
         }
+      }
+      else {
+        Count = 0;
+        Correction_Time = 0;
+        SD_Flag = 0;
       }
       break;
   }
